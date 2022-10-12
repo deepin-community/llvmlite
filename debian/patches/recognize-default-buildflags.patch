@@ -1,0 +1,23 @@
+Description: recognize build flags from environment
+ Quick fix to solve https://github.com/numba/llvmlite/issues/443.
+Author: Daniel Stender <stender@debian.org>
+Forwarded: not-needed
+Last-Update: 2019-01-04
+
+Index: llvmlite/ffi/build.py
+===================================================================
+--- llvmlite.orig/ffi/build.py
++++ llvmlite/ffi/build.py
+@@ -190,10 +190,10 @@ def main_posix(kind, library_ext):
+     else:
+         print('SVML not detected')
+ 
+-    os.environ['LLVM_CXXFLAGS'] = ' '.join(cxxflags)
++    os.environ['LLVM_CXXFLAGS'] = os.environ['CXXFLAGS'] + ' ' + ' '.join(cxxflags)
+ 
+     ldflags = run_llvm_config(llvm_config, ["--ldflags"])
+-    os.environ['LLVM_LDFLAGS'] = ldflags.strip()
++    os.environ['LLVM_LDFLAGS'] = os.environ['LDFLAGS'] + ' ' + ldflags.strip()
+     # static link libstdc++ for portability
+     if int(os.environ.get('LLVMLITE_CXX_STATIC_LINK', 0)):
+         os.environ['CXX_STATIC_LINK'] = "-static-libstdc++"
