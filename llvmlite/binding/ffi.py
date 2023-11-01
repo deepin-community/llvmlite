@@ -1,6 +1,7 @@
+import sys
 import ctypes
-import os
 import threading
+import importlib.resources as _impres
 
 from llvmlite.binding.common import _decode_string, _is_shutting_down
 from llvmlite.utils import get_library_name
@@ -35,6 +36,8 @@ LLVMTypesIterator = _make_opaque_ref("LLVMTypesIterator")
 LLVMObjectCacheRef = _make_opaque_ref("LLVMObjectCache")
 LLVMObjectFileRef = _make_opaque_ref("LLVMObjectFile")
 LLVMSectionIteratorRef = _make_opaque_ref("LLVMSectionIterator")
+LLVMOrcLLJITRef = _make_opaque_ref("LLVMOrcLLJITRef")
+LLVMOrcDylibTrackerRef = _make_opaque_ref("LLVMOrcDylibTrackerRef")
 
 
 class _LLVMLock:
@@ -77,18 +80,54 @@ class _LLVMLock:
         self._lock.release()
 
 
+class _suppress_cleanup_errors:
+    def __init__(self, context):
+        self._context = context
+
+    def __enter__(self):
+        return self._context.__enter__()
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        try:
+            return self._context.__exit__(exc_type, exc_value, traceback)
+        except PermissionError:
+            pass  # Resource dylibs can't be deleted on Windows.
+
+
 class _lib_wrapper(object):
     """Wrap libllvmlite with a lock such that only one thread may access it at
     a time.
 
     This class duck-types a CDLL.
     """
-    __slots__ = ['_lib', '_fntab', '_lock']
+    __slots__ = ['_lib_handle', '_fntab', '_lock']
 
-    def __init__(self, lib):
-        self._lib = lib
+    def __init__(self):
+        self._lib_handle = None
         self._fntab = {}
         self._lock = _LLVMLock()
+
+    def _load_lib(self):
+        try:
+            with _suppress_cleanup_errors(_importlib_resources_path(
+                    __name__.rpartition(".")[0],
+                    get_library_name())) as lib_path:
+                self._lib_handle = ctypes.CDLL(str(lib_path))
+                # Check that we can look up expected symbols.
+                _ = self._lib_handle.LLVMPY_GetVersionInfo()
+        except (OSError, AttributeError) as e:
+            # OSError may be raised if the file cannot be opened, or is not
+            # a shared library.
+            # AttributeError is raised if LLVMPY_GetVersionInfo does not
+            # exist.
+            raise OSError("Could not find/load shared object file") from e
+
+    @property
+    def _lib(self):
+        # Not threadsafe.
+        if not self._lib_handle:
+            self._load_lib()
+        return self._lib_handle
 
     def __getattr__(self, name):
         try:
@@ -151,51 +190,26 @@ class _lib_fn_wrapper(object):
             return self._cfn(*args, **kwargs)
 
 
-_lib_dir = os.path.dirname(__file__)
+def _importlib_resources_path_repl(package, resource):
+    """Replacement implementation of `import.resources.path` to avoid
+    deprecation warning following code at importlib_resources/_legacy.py
+    as suggested by https://importlib-resources.readthedocs.io/en/latest/using.html#migrating-from-legacy
 
-if os.name == 'nt':
-    # Append DLL directory to PATH, to allow loading of bundled CRT libraries
-    # (Windows uses PATH for DLL loading, see http://msdn.microsoft.com/en-us/library/7d83bc18.aspx).  # noqa E501
-    os.environ['PATH'] += ';' + _lib_dir
+    Notes on differences from importlib.resources implementation:
 
-
-_lib_name = get_library_name()
-
-
-# Possible CDLL loading paths
-_lib_paths = [
-    os.path.join(_lib_dir, _lib_name),  # Absolute
-    _lib_name,  # In PATH
-    os.path.join('.', _lib_name),  # Current directory
-]
-
-# If pkg_resources is available, try to use it to load the shared object.
-# This allows direct import from egg files.
-try:
-    from pkg_resources import resource_filename
-except ImportError:
-    pass
-else:
-    _lib_paths.append(resource_filename(__name__, _lib_name))
+    The `_common.normalize_path(resource)` call is skipped because it is an
+    internal API and it is unnecessary for the use here. What it does is
+    ensuring `resource` is a str and that it does not contain path separators.
+    """ # noqa E501
+    return _impres.as_file(_impres.files(package) / resource)
 
 
-# Try to load from all of the different paths
-errors = []
-for _lib_path in _lib_paths:
-    try:
-        lib = ctypes.CDLL(_lib_path)
-    except OSError as e:
-        errors.append(e)
-        continue
-    else:
-        break
-else:
-    msg = ("Could not load shared object file: {}\n".format(_lib_name) +
-           "Errors were: {}".format(errors))
-    raise OSError(msg)
+_importlib_resources_path = (_importlib_resources_path_repl
+                             if sys.version_info[:2] >= (3, 9)
+                             else _impres.path)
 
 
-lib = _lib_wrapper(lib)
+lib = _lib_wrapper()
 
 
 def register_lock_callback(acq_fn, rel_fn):

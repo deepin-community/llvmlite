@@ -119,8 +119,8 @@ def _uniop_intrinsic_with_flag(opname):
                 raise TypeError(
                     "expected an integer type, got %s" %
                     operand.type)
-            if not(isinstance(flag.type, types.IntType) and
-                   flag.type.width == 1):
+            if not (isinstance(flag.type, types.IntType) and
+                    flag.type.width == 1):
                 raise TypeError("expected an i1 type, got %s" % flag.type)
             fn = self.module.declare_intrinsic(
                 opname, [operand.type, flag.type])
@@ -555,7 +555,7 @@ class IRBuilder(object):
         return self.sub(values.Constant(value.type, 0), value, name=name)
 
     @_unop('fneg')
-    def fneg(self, arg, name=''):
+    def fneg(self, arg, name='', flags=()):
         """
         Floating-point negative:
             name = -arg
@@ -594,7 +594,7 @@ class IRBuilder(object):
         """
         return self._icmp('u', cmpop, lhs, rhs, name)
 
-    def fcmp_ordered(self, cmpop, lhs, rhs, name='', flags=[]):
+    def fcmp_ordered(self, cmpop, lhs, rhs, name='', flags=()):
         """
         Floating-point ordered comparison:
             name = lhs <cmpop> rhs
@@ -610,7 +610,7 @@ class IRBuilder(object):
         self._insert(instr)
         return instr
 
-    def fcmp_unordered(self, cmpop, lhs, rhs, name='', flags=[]):
+    def fcmp_unordered(self, cmpop, lhs, rhs, name='', flags=()):
         """
         Floating-point unordered comparison:
             name = lhs <cmpop> rhs
@@ -626,12 +626,13 @@ class IRBuilder(object):
         self._insert(instr)
         return instr
 
-    def select(self, cond, lhs, rhs, name=''):
+    def select(self, cond, lhs, rhs, name='', flags=()):
         """
         Ternary select operator:
             name = cond ? lhs : rhs
         """
-        instr = instructions.SelectInstr(self.block, cond, lhs, rhs, name=name)
+        instr = instructions.SelectInstr(self.block, cond, lhs, rhs, name=name,
+                                         flags=flags)
         self._insert(instr)
         return instr
 
@@ -985,8 +986,8 @@ class IRBuilder(object):
 
     # PHI APIs
 
-    def phi(self, typ, name=''):
-        inst = instructions.PhiInstr(self.block, typ, name=name)
+    def phi(self, typ, name='', flags=()):
+        inst = instructions.PhiInstr(self.block, typ, name=name, flags=flags)
         self._insert(inst)
         return inst
 
@@ -1041,6 +1042,18 @@ class IRBuilder(object):
         respect to other processors and devices.
         """
         inst = instructions.Fence(self.block, ordering, targetscope, name=name)
+        self._insert(inst)
+        return inst
+
+    def comment(self, text):
+        """
+        Puts a single-line comment into the generated IR. This will be ignored
+        by LLVM, but can be useful for debugging the output of a compiler. Adds
+        a comment to the source file.
+
+        * *text* is a string that does not contain new line characters.
+        """
+        inst = instructions.Comment(self.block, text)
         self._insert(inst)
         return inst
 

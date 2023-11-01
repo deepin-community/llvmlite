@@ -1,3 +1,211 @@
+v0.41.1 (Oct 17, 2023)
+----------------------
+
+This is a maintenance release that includes a workaround in the test suite for
+ORCJit issues on the ``aarch64`` platform. Also, this is the last release to
+support the Windows 32-bit platform (``win32``).
+
+Pull-Requests:
+
+* PR `#996 <https://github.com/numba/llvmlite/pull/996>`_: fix typos found by codespell (`esc <https://github.com/esc>`_)
+* PR `#997 <https://github.com/numba/llvmlite/pull/997>`_: Fix issue #880 by ensuring all sources are compiled under FreeBSD. (`ke6jjj <https://github.com/ke6jjj>`_)
+* PR `#998 <https://github.com/numba/llvmlite/pull/998>`_: adding sphinx_rtd_theme to RTD build to fix build (`esc <https://github.com/esc>`_)
+* PR `#1001 <https://github.com/numba/llvmlite/pull/1001>`_: Fix / workaround for OrcJIT blocking issues (`gmarkall <https://github.com/gmarkall>`_)
+
+Authors:
+
+* `esc <https://github.com/esc>`_
+* `ke6jjj <https://github.com/ke6jjj>`_
+* `gmarkall <https://github.com/gmarkall>`_
+
+v0.41.0 (Sept 20, 2023)
+-----------------------
+
+Pull-Requests:
+
+* PR `#871 <https://github.com/numba/llvmlite/pull/871>`_: Refactor native library loading (`folded <https://github.com/folded>`_ `sklam <https://github.com/sklam>`_)
+* PR `#896 <https://github.com/numba/llvmlite/pull/896>`_: drop upper limit on Python for conda recipe (`esc <https://github.com/esc>`_)
+* PR `#904 <https://github.com/numba/llvmlite/pull/904>`_: Create GitHub Action for llvmlite release (`apmasell <https://github.com/apmasell>`_)
+* PR `#934 <https://github.com/numba/llvmlite/pull/934>`_: Expose TargetLibraryInfo pass (`sklam <https://github.com/sklam>`_)
+* PR `#935 <https://github.com/numba/llvmlite/pull/935>`_: Disable zlib for LLVM on Windows (`apmasell <https://github.com/apmasell>`_)
+* PR `#936 <https://github.com/numba/llvmlite/pull/936>`_: Enable querying constants and value kinds (`tbennun <https://github.com/tbennun>`_)
+* PR `#939 <https://github.com/numba/llvmlite/pull/939>`_: Bump llvmdev build number to include the nozlib change for windows (`sklam <https://github.com/sklam>`_)
+* PR `#940 <https://github.com/numba/llvmlite/pull/940>`_: Update CHANGE_LOG for 0.40.0 final. (`stuartarchibald <https://github.com/stuartarchibald>`_)
+* PR `#942 <https://github.com/numba/llvmlite/pull/942>`_: Add ORCJITv2 support (`apmasell <https://github.com/apmasell>`_)
+* PR `#951 <https://github.com/numba/llvmlite/pull/951>`_: Add a type hint for `IntType.width` (`apmasell <https://github.com/apmasell>`_)
+* PR `#952 <https://github.com/numba/llvmlite/pull/952>`_: Fix CI failing due to unsupported target triple on non-x86 platforms. (`sklam <https://github.com/sklam>`_)
+* PR `#958 <https://github.com/numba/llvmlite/pull/958>`_: fixup LLVM versions in version compat table (`esc <https://github.com/esc>`_)
+* PR `#959 <https://github.com/numba/llvmlite/pull/959>`_: Remove support for LLVM < 14 (`apmasell <https://github.com/apmasell>`_)
+* PR `#960 <https://github.com/numba/llvmlite/pull/960>`_: add various bullets to release checklists and sync (`esc <https://github.com/esc>`_)
+* PR `#963 <https://github.com/numba/llvmlite/pull/963>`_: Allow adding comments to generated IR (`apmasell <https://github.com/apmasell>`_)
+* PR `#966 <https://github.com/numba/llvmlite/pull/966>`_: build: support building on GNU/Hurd (`pinotree <https://github.com/pinotree>`_)
+* PR `#967 <https://github.com/numba/llvmlite/pull/967>`_: Expose library name in OrcJIT tracker (`apmasell <https://github.com/apmasell>`_)
+* PR `#968 <https://github.com/numba/llvmlite/pull/968>`_: Update LLVM manual build instructions (`apmasell <https://github.com/apmasell>`_)
+* PR `#969 <https://github.com/numba/llvmlite/pull/969>`_: update changelog on main for v0.40.1 (`esc <https://github.com/esc>`_)
+* PR `#983 <https://github.com/numba/llvmlite/pull/983>`_: adding RTD conf file V2 as per request (`esc <https://github.com/esc>`_)
+* PR `#985 <https://github.com/numba/llvmlite/pull/985>`_: Update release checklist post 0.41.0rc1 (`esc <https://github.com/esc>`_)
+* PR `#988 <https://github.com/numba/llvmlite/pull/988>`_: Fix FreeBsd build (`sklam <https://github.com/sklam>`_)
+
+Authors:
+
+* `apmasell <https://github.com/apmasell>`_
+* `esc <https://github.com/esc>`_
+* `folded <https://github.com/folded>`_
+* `pinotree <https://github.com/pinotree>`_
+* `sklam <https://github.com/sklam>`_
+* `stuartarchibald <https://github.com/stuartarchibald>`_
+* `tbennun <https://github.com/tbennun>`_
+
+v0.40.1 (June 21, 2023)
+-----------------------
+
+Pull-Requests:
+
+* PR `#945 <https://github.com/numba/llvmlite/pull/945>`_: Fix #944. Add `.argtypes` to prevent errors in pypy. (`Siu Kwan Lam <https://github.com/sklam>`_)
+* PR `#947 <https://github.com/numba/llvmlite/pull/947>`_: Update SVML patch for LLVM 14 (`Andre Masella <https://github.com/apmasell>`_)
+* PR `#949 <https://github.com/numba/llvmlite/pull/949>`_: Handle PowerPC synonyms (`Andre Masella <https://github.com/apmasell>`_)
+* PR `#950 <https://github.com/numba/llvmlite/pull/950>`_: Fix incorrect `byval` and other attributes on LLVM 14 (`Andre Masella <https://github.com/apmasell>`_)
+
+Authors:
+
+* `Andre Masella <https://github.com/apmasell>`_
+* `Siu Kwan Lam <https://github.com/sklam>`_
+
+
+v0.40.0 (May 1, 2023)
+---------------------
+
+This release predominantly upgrades to LLVM 14 and Python 3.11.
+Bindings to a large number of passes are added.
+The minimum supported Python version is now Python 3.8.
+
+Note: A bug was discovered in LLVM's RuntimeDyldELF on the Aarch64 platform that
+can cause segfaults when cross module symbols are linked. It is necessary
+for JIT users to build LLVM with the patch added in 
+`PR#926 <https://github.com/numba/llvmlite/pull/926>`_.
+
+Pull-Requests:
+
+* PR `#827 <https://github.com/numba/llvmlite/pull/827>`_: Add more LLVM pass bindings (`apmasell <https://github.com/apmasell>`_)
+* PR `#830 <https://github.com/numba/llvmlite/pull/830>`_: Add LLVM 14 support (`apmasell <https://github.com/apmasell>`_)
+* PR `#860 <https://github.com/numba/llvmlite/pull/860>`_: the git tag for the RC needs an rc1 suffix (`esc <https://github.com/esc>`_)
+* PR `#869 <https://github.com/numba/llvmlite/pull/869>`_: bump max Python version to 3.11 (`esc <https://github.com/esc>`_ `sklam <https://github.com/sklam>`_)
+
+* PR `#876 <https://github.com/numba/llvmlite/pull/876>`_: Remove ``llvmlite.llvmpy`` after deprecation (`apmasell <https://github.com/apmasell>`_)
+* PR `#883 <https://github.com/numba/llvmlite/pull/883>`_: Adds support for calling functions with 'tail', 'notail', or 'musttail' markers. (`bslatkin <https://github.com/bslatkin>`_)
+* PR `#886 <https://github.com/numba/llvmlite/pull/886>`_: Simplify setup.py Python version guard (`mbargull <https://github.com/mbargull>`_)
+* PR `#892 <https://github.com/numba/llvmlite/pull/892>`_: Bump minimum supported Python version to 3.8 (`jamesobutler <https://github.com/jamesobutler>`_)
+* PR `#893 <https://github.com/numba/llvmlite/pull/893>`_: Upgrade to ubuntu-20.04 for azure pipeline CI (`jamesobutler <https://github.com/jamesobutler>`_)
+* PR `#899 <https://github.com/numba/llvmlite/pull/899>`_: Run Minconda install with bash (`gmarkall <https://github.com/gmarkall>`_)
+* PR `#903 <https://github.com/numba/llvmlite/pull/903>`_: Fix flake8 config and style for flake8 6 (`gmarkall <https://github.com/gmarkall>`_)
+* PR `#905 <https://github.com/numba/llvmlite/pull/905>`_: Add YouCompleteMe configuration file and ignore vim swap files (`gmarkall <https://github.com/gmarkall>`_)
+* PR `#906 <https://github.com/numba/llvmlite/pull/906>`_: Replace importlib-resources legacy API use (`sklam <https://github.com/sklam>`_)
+* PR `#910 <https://github.com/numba/llvmlite/pull/910>`_: Aarch64 split build for LLVM14 (`sklam <https://github.com/sklam>`_)
+* PR `#921 <https://github.com/numba/llvmlite/pull/921>`_: Setup AzureCI to use py311 and llvm14  (`sklam <https://github.com/sklam>`_)
+* PR `#922 <https://github.com/numba/llvmlite/pull/922>`_: Fix AzureCI not using llvm14 on windows (`sklam <https://github.com/sklam>`_)
+* PR `#926 <https://github.com/numba/llvmlite/pull/926>`_: llvmdev recipe: Add patch that clears GOTOffsetMap (`apmasell <https://github.com/apmasell>`_ `gmarkall <https://github.com/gmarkall>`_ `sklam <https://github.com/sklam>`_)
+* PR `#930 <https://github.com/numba/llvmlite/pull/930>`_: Update changelog for 0.40.0rc1  (`sklam <https://github.com/sklam>`_ `stuartarchibald <https://github.com/stuartarchibald>`_)
+* PR `#931 <https://github.com/numba/llvmlite/pull/931>`_: Remove maximum Python version limit (`sklam <https://github.com/sklam>`_ `apmasell <https://github.com/apmasell>`_)
+* PR `#932 <https://github.com/numba/llvmlite/pull/932>`_: Fix wheel builds (`sklam <https://github.com/sklam>`_)
+* PR `#935 <https://github.com/numba/llvmlite/pull/935>`_: Disable zlib for LLVM on Windows (`apmasell <https://github.com/apmasell>`_)
+* PR `#939 <https://github.com/numba/llvmlite/pull/939>`_: Bump llvmdev build number to include the nozlib change for windows (`sklam <https://github.com/sklam>`_)
+* PR `#940 <https://github.com/numba/llvmlite/pull/940>`_: Update CHANGE_LOG for 0.40.0 final. (`stuartarchibald <https://github.com/stuartarchibald>`_)
+
+Authors:
+
+* `apmasell <https://github.com/apmasell>`_
+* `bslatkin <https://github.com/bslatkin>`_
+* `esc <https://github.com/esc>`_
+* `gmarkall <https://github.com/gmarkall>`_
+* `jamesobutler <https://github.com/jamesobutler>`_
+* `mbargull <https://github.com/mbargull>`_
+* `sklam <https://github.com/sklam>`_
+* `stuartarchibald <https://github.com/stuartarchibald>`_
+
+v0.39.1 (September 1, 2022)
+---------------------------
+
+This is a maintenance release to fix build issues on MacOS.
+
+Pull-Requests:
+
+* PR `#752 <https://github.com/numba/llvmlite/pull/752>`_: Skip test if libm is not found (`Siu Kwan Lam <https://github.com/sklam>`_)
+* PR `#865 <https://github.com/numba/llvmlite/pull/865>`_: Move Azure to use macos-11 (`stuartarchibald <https://github.com/stuartarchibald>`_)
+* PR `#874 <https://github.com/numba/llvmlite/pull/874>`_: Add zlib as a dependency for aarch64 (`esc <https://github.com/esc>`_)
+* PR `#878 <https://github.com/numba/llvmlite/pull/878>`_: Update changelog (`Andre Masella <https://github.com/apmasell>`_)
+
+v0.39.0 (July 25, 2022)
+-----------------------
+
+This release predominantly adds new features and improves functionality.
+
+* It's now possible to directly set LLVM ``metadata`` on global variables.
+* Functions and global variables now support the specification of a ``section``
+  in which they should be placed.
+* The attribute ``source_file`` had been added to the ``ModuleRef`` class, it
+  returns the module's original file name.
+* The FFI library binding to LLVM is now loaded with ``importlib`` to increase
+  compatibility with other projects and improve start-up times.
+* Linux builds now use the parallel option to ``make`` to speed up building the
+  FFI library.
+* Preliminary work to expose LLVM's optimization-remarks interface has been
+  undertaken. The bindings are exposed and tested, but not yet documented for
+  general use (additional work is needed).
+
+Deprecations:
+
+* The ``llvmlite.llvmpy`` module has been deprecated as the functionality it
+  provides is available through the ``llvmlite.ir`` module. See the deprecation
+  guide in the user documentation for details and recommendations regarding
+  replacement.
+
+Pull-Requests:
+
+* PR `#328 <https://github.com/numba/llvmlite/pull/328>`_: Build C files separately on Linux and support parallel make (`Michał Górny <https://github.com/mgorny>`_)
+* PR `#754 <https://github.com/numba/llvmlite/pull/754>`_: manylinux2014 aarch64 wheels with system compilers (`esc <https://github.com/esc>`_)
+* PR `#760 <https://github.com/numba/llvmlite/pull/760>`_: add support for attaching metadata to global variables (`Graham Markall <https://github.com/gmarkall>`_ `John Törnblom <https://github.com/john-tornblom>`_)
+* PR `#786 <https://github.com/numba/llvmlite/pull/786>`_: Update Windows and OSX CI images. (`stuartarchibald <https://github.com/stuartarchibald>`_)
+* PR `#801 <https://github.com/numba/llvmlite/pull/801>`_: Update ffi.py (`franzhaas <https://github.com/franzhaas>`_)
+* PR `#803 <https://github.com/numba/llvmlite/pull/803>`_: llvm::Module::GetSourceFileName (`J. Aaron Pendergrass <https://github.com/japendergrass>`_)
+* PR `#806 <https://github.com/numba/llvmlite/pull/806>`_: Bump to v0.39.0dev (`esc <https://github.com/esc>`_)
+* PR `#807 <https://github.com/numba/llvmlite/pull/807>`_: Exclude ExecutionEngine tests on linux 32 (`esc <https://github.com/esc>`_)
+* PR `#809 <https://github.com/numba/llvmlite/pull/809>`_: Update CHANGE_LOG for 0.38.0 (`stuartarchibald <https://github.com/stuartarchibald>`_)
+* PR `#813 <https://github.com/numba/llvmlite/pull/813>`_: Add m1 support to conda build scripts (`esc <https://github.com/esc>`_ `Stan Seibert <https://github.com/seibert>`_)
+* PR `#815 <https://github.com/numba/llvmlite/pull/815>`_: update local references (`esc <https://github.com/esc>`_)
+* PR `#816 <https://github.com/numba/llvmlite/pull/816>`_: remove configuration landscape service as it is no longer used (`esc <https://github.com/esc>`_)
+* PR `#817 <https://github.com/numba/llvmlite/pull/817>`_: remove uppper limit on Python requires (`esc <https://github.com/esc>`_)
+* PR `#819 <https://github.com/numba/llvmlite/pull/819>`_: adding rc and final release checklist templates (`esc <https://github.com/esc>`_)
+* PR `#823 <https://github.com/numba/llvmlite/pull/823>`_: Add section to globals (`Andreas Wrisley <https://github.com/anlofw>`_)
+* PR `#824 <https://github.com/numba/llvmlite/pull/824>`_: add GitHub URL for PyPi (`Andrii Oriekhov <https://github.com/andriyor>`_)
+* PR `#825 <https://github.com/numba/llvmlite/pull/825>`_: Add flag handling to more instructions. (`stuartarchibald <https://github.com/stuartarchibald>`_ `Andre Masella <https://github.com/apmasell>`_)
+* PR `#826 <https://github.com/numba/llvmlite/pull/826>`_: Deprecated `llvmlite.llvmpy` (`Andre Masella <https://github.com/apmasell>`_)
+* PR `#831 <https://github.com/numba/llvmlite/pull/831>`_: Format C++ code (`Andre Masella <https://github.com/apmasell>`_)
+* PR `#832 <https://github.com/numba/llvmlite/pull/832>`_: DOC: Fix the syntax for the llvmlite discourse topic link. (`stuartarchibald <https://github.com/stuartarchibald>`_)
+* PR `#835 <https://github.com/numba/llvmlite/pull/835>`_: Add pre-commit hooks for clang-format (`Andre Masella <https://github.com/apmasell>`_)
+* PR `#837 <https://github.com/numba/llvmlite/pull/837>`_: Add support for optimization remarks in pass managers (`Siu Kwan Lam <https://github.com/sklam>`_ `Andre Masella <https://github.com/apmasell>`_)
+* PR `#846 <https://github.com/numba/llvmlite/pull/846>`_: Cherry-Pick: #842 --> `main` :Changelog for 0.38.1 (`esc <https://github.com/esc>`_)
+* PR `#851 <https://github.com/numba/llvmlite/pull/851>`_: adding the llvm_11_consecutive_registers.patch (`esc <https://github.com/esc>`_)
+* PR `#857 <https://github.com/numba/llvmlite/pull/857>`_: Delegate passmanager remarks methods (`Andre Masella <https://github.com/apmasell>`_)
+* PR `#858 <https://github.com/numba/llvmlite/pull/858>`_: Update CHANGE_LOG for 0.39.0 (`esc <https://github.com/esc>`_ `Graham Markall <https://github.com/gmarkall>`_ `stuartarchibald <https://github.com/stuartarchibald>`_)
+* PR `#863 <https://github.com/numba/llvmlite/pull/863>`_: Update changelog for 0.39.0 release (`Siu Kwan Lam <https://github.com/sklam>`_)
+* PR `#864 <https://github.com/numba/llvmlite/pull/864>`_: Update release date for 0.39.0 release. (`stuartarchibald <https://github.com/stuartarchibald>`_)
+* PR `#867 <https://github.com/numba/llvmlite/pull/867>`_: Update CHANGE_LOG 0.39.0 final. (`stuartarchibald <https://github.com/stuartarchibald>`_)
+
+Authors:
+
+* `Andrii Oriekhov <https://github.com/andriyor>`_
+* `Andreas Wrisley <https://github.com/anlofw>`_
+* `Andre Masella <https://github.com/apmasell>`_
+* `esc <https://github.com/esc>`_
+* `franzhaas <https://github.com/franzhaas>`_
+* `Graham Markall <https://github.com/gmarkall>`_
+* `J. Aaron Pendergrass <https://github.com/japendergrass>`_
+* `John Törnblom <https://github.com/john-tornblom>`_
+* `Michał Górny <https://github.com/mgorny>`_
+* `Stan Seibert <https://github.com/seibert>`_
+* `Siu Kwan Lam <https://github.com/sklam>`_
+* `stuartarchibald <https://github.com/stuartarchibald>`_
+
 v0.38.1 (May 19, 2022)
 ----------------------
 

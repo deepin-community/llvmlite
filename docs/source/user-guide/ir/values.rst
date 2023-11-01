@@ -373,6 +373,13 @@ Global values are values accessible using a module-wide name.
         * Other possible values include ``dllimport`` and
           ``dllexport``.
 
+   * .. attribute:: section
+
+        A Python string describing the section a global value
+        should be in after translation. The default is the empty
+        string, meaning no specific section.
+
+
    See also :class:`_ConstOpMixin`.
 
 .. class:: GlobalVariable(module, typ, name, addrspace=0)
@@ -396,6 +403,11 @@ Global values are values accessible using a module-wide name.
      variable in.
 
    Global variables have the following writable attributes:
+
+   * .. method:: set_metadata(name, node)
+
+        Add metadata with the given *name*, pointing to the given
+        metadata *node*---an instance of :class:`MDValue`.
 
    * .. attribute:: global_constant
 

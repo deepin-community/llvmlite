@@ -9,8 +9,8 @@
 # versioneer-0.12 (https://github.com/warner/python-versioneer)
 
 # these strings will be replaced by git during git-archive
-git_refnames = " (tag: v0.38.1, release0.38)"
-git_full = "650c36d5a79e3825d26fb44f4abd853729a9b959"
+git_refnames = " (tag: v0.41.1, release0.41)"
+git_full = "42db9b74c8e8ca012cb4394cbf941f2f9e4ae12b"
 
 # these strings are filled in when 'setup.py versioneer' creates _version.py
 tag_prefix = "v"
