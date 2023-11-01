@@ -1,5 +1,6 @@
 import ctypes
-from ctypes import CFUNCTYPE, c_int
+import threading
+from ctypes import CFUNCTYPE, c_int, c_int32
 from ctypes.util import find_library
 import gc
 import locale
@@ -37,6 +38,7 @@ def no_de_locale():
 
 asm_sum = r"""
     ; ModuleID = '<string>'
+    source_filename = "asm_sum.c"
     target triple = "{triple}"
     %struct.glob_type = type {{ i64, [2 x i64]}}
 
@@ -62,6 +64,18 @@ asm_sum2 = r"""
     }}
     """
 
+asm_sum3 = r"""
+    ; ModuleID = '<string>'
+    target triple = "{triple}"
+
+    define i64 @sum(i64 %.1, i64 %.2) {{
+      %.3 = add i64 %.1, %.2
+      %.4 = add i64 5, %.3
+      %.5 = add i64 -5, %.4
+      ret i64 %.5
+    }}
+    """
+
 asm_mul = r"""
     ; ModuleID = '<string>'
     target triple = "{triple}"
@@ -72,6 +86,34 @@ asm_mul = r"""
       ret i32 %.3
     }}
     """
+
+asm_square_sum = r"""
+    ; ModuleID = '<string>'
+    target triple = "{triple}"
+    @mul_glob = global i32 0
+
+    declare i32 @sum(i32, i32)
+    define i32 @square_sum(i32 %.1, i32 %.2) {{
+      %.3 = call i32 @sum(i32 %.1, i32 %.2)
+      %.4 = mul i32 %.3, %.3
+      ret i32 %.4
+    }}
+    """
+
+asm_getversion = r"""
+    ; ModuleID = '<string>'
+    target triple = "{triple}"
+
+    declare i8* @Py_GetVersion()
+
+    define void @getversion(i32 %.1, i32 %.2) {{
+      %1 = call i8* @Py_GetVersion()
+      ret void
+    }}
+    """
+
+if platform.python_implementation() == 'PyPy':
+    asm_getversion = asm_getversion.replace('Py_GetVersion', 'PyPy_GetVersion')
 
 # `fadd` used on integer inputs
 asm_parse_error = r"""
@@ -102,6 +144,15 @@ asm_sum_declare = r"""
     declare i32 @sum(i32 %.1, i32 %.2)
     """
 
+asm_double_inaccurate = r"""
+    ; ModuleID = '<string>'
+    target triple = "{triple}"
+
+    define void @foo() {{
+      %const = fadd fp128 0xLF3CB1CCF26FBC178452FB4EC7F91DEAD, 0xL00000000000000000000000000000001
+      ret void
+    }}
+    """  # noqa E501
 
 asm_double_locale = r"""
     ; ModuleID = '<string>'
@@ -123,6 +174,136 @@ asm_inlineasm = r"""
       ret void
     }}
     """
+
+asm_inlineasm2 = """
+    ; ModuleID = '<string>'
+    target triple = "{triple}"
+
+    define void @inlineme() {{
+        ret void
+    }}
+
+    define i32 @caller(i32 %.1, i32 %.2) {{
+    entry:
+      %stack = alloca i32
+      store i32 %.1, i32* %stack
+      br label %main
+    main:
+      %loaded = load i32, i32* %stack
+      %.3 = add i32 %loaded, %.2
+      %.4 = add i32 0, %.3
+      call void @inlineme()
+      ret i32 %.4
+    }}
+"""
+
+asm_inlineasm3 = """
+; ModuleID = 'test.c'
+source_filename = "test.c"
+target triple = "{triple}"
+
+; Function Attrs: noinline nounwind optnone ssp uwtable
+define void @inlineme() noinline !dbg !15 {{
+  ret void, !dbg !18
+}}
+
+; Function Attrs: noinline nounwind optnone ssp uwtable
+define i32 @foo(i32 %0, i32 %1) !dbg !19 {{
+  %3 = alloca i32, align 4
+  %4 = alloca i32, align 4
+  store i32 %0, i32* %3, align 4
+  call void @llvm.dbg.declare(metadata i32* %3, metadata !23, metadata !DIExpression()), !dbg !24
+  store i32 %1, i32* %4, align 4
+  call void @llvm.dbg.declare(metadata i32* %4, metadata !25, metadata !DIExpression()), !dbg !26
+  call void @inlineme(), !dbg !27
+  %5 = load i32, i32* %3, align 4, !dbg !28
+  %6 = load i32, i32* %4, align 4, !dbg !29
+  %7 = add nsw i32 %5, %6, !dbg !30
+  ret i32 %7, !dbg !31
+}}
+
+; Function Attrs: nofree nosync nounwind readnone speculatable willreturn
+declare void @llvm.dbg.declare(metadata, metadata, metadata) #1
+
+attributes #1 = {{ nofree nosync nounwind readnone speculatable willreturn }}
+
+!llvm.module.flags = !{{!1, !2, !3, !4, !5, !6, !7, !8, !9, !10}}
+!llvm.dbg.cu = !{{!11}}
+!llvm.ident = !{{!14}}
+
+!0 = !{{i32 2, !"SDK Version", [2 x i32] [i32 12, i32 3]}}
+!1 = !{{i32 7, !"Dwarf Version", i32 4}}
+!2 = !{{i32 2, !"Debug Info Version", i32 3}}
+!3 = !{{i32 1, !"wchar_size", i32 4}}
+!4 = !{{i32 1, !"branch-target-enforcement", i32 0}}
+!5 = !{{i32 1, !"sign-return-address", i32 0}}
+!6 = !{{i32 1, !"sign-return-address-all", i32 0}}
+!7 = !{{i32 1, !"sign-return-address-with-bkey", i32 0}}
+!8 = !{{i32 7, !"PIC Level", i32 2}}
+!9 = !{{i32 7, !"uwtable", i32 1}}
+!10 = !{{i32 7, !"frame-pointer", i32 1}}
+!11 = distinct !DICompileUnit(language: DW_LANG_C99, file: !12, producer: "Apple clang version 13.1.6 (clang-1316.0.21.2.3)", isOptimized: false, runtimeVersion: 0, emissionKind: FullDebug, enums: !13, splitDebugInlining: false, nameTableKind: None, sysroot: "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk", sdk: "MacOSX.sdk")
+!12 = !DIFile(filename: "test.c", directory: "/")
+!13 = !{{}}
+!14 = !{{!"Apple clang version 13.1.6 (clang-1316.0.21.2.3)"}}
+!15 = distinct !DISubprogram(name: "inlineme", scope: !12, file: !12, line: 1, type: !16, scopeLine: 1, flags: DIFlagPrototyped, spFlags: DISPFlagDefinition, unit: !11, retainedNodes: !13)
+!16 = !DISubroutineType(types: !17)
+!17 = !{{null}}
+!18 = !DILocation(line: 1, column: 22, scope: !15)
+!19 = distinct !DISubprogram(name: "foo", scope: !12, file: !12, line: 3, type: !20, scopeLine: 3, flags: DIFlagPrototyped, spFlags: DISPFlagDefinition, unit: !11, retainedNodes: !13)
+!20 = !DISubroutineType(types: !21)
+!21 = !{{!22, !22, !22}}
+!22 = !DIBasicType(name: "int", size: 32, encoding: DW_ATE_signed)
+!23 = !DILocalVariable(name: "a", arg: 1, scope: !19, file: !12, line: 3, type: !22)
+!24 = !DILocation(line: 3, column: 13, scope: !19)
+!25 = !DILocalVariable(name: "b", arg: 2, scope: !19, file: !12, line: 3, type: !22)
+!26 = !DILocation(line: 3, column: 20, scope: !19)
+!27 = !DILocation(line: 4, column: 5, scope: !19)
+!28 = !DILocation(line: 5, column: 12, scope: !19)
+!29 = !DILocation(line: 5, column: 16, scope: !19)
+!30 = !DILocation(line: 5, column: 14, scope: !19)
+!31 = !DILocation(line: 5, column: 5, scope: !19)
+"""  # noqa E501
+
+licm_asm = r"""
+; ModuleID = "<string>"
+target triple = "{triple}"
+
+define double @licm(i32 %0) {{
+  %2 = alloca i32, align 4
+  %3 = alloca double, align 8
+  %4 = alloca i32, align 4
+  %5 = alloca double, align 8
+  store i32 %0, i32* %2, align 4
+  store double 0.000000e+00, double* %3, align 8
+  store i32 0, i32* %4, align 4
+  br label %6
+
+6:                                                ; preds = %14, %1
+  %7 = load i32, i32* %4, align 4
+  %8 = load i32, i32* %2, align 4
+  %9 = icmp slt i32 %7, %8
+  br i1 %9, label %10, label %17
+
+10:                                               ; preds = %6
+  store double 7.000000e+00, double* %5, align 8
+  %11 = load double, double* %5, align 8
+  %12 = load double, double* %3, align 8
+  %13 = fadd double %12, %11
+  store double %13, double* %3, align 8
+  br label %14
+
+14:                                               ; preds = %10
+  %15 = load i32, i32* %4, align 4
+  %16 = add nsw i32 %15, 1
+  store i32 %16, i32* %4, align 4
+  br label %6
+
+17:                                               ; preds = %6
+  %18 = load double, double* %3, align 8
+  ret double %18
+}}
+"""  # noqa E501
 
 asm_global_ctors = r"""
     ; ModuleID = "<string>"
@@ -153,17 +334,61 @@ asm_global_ctors = r"""
     @llvm.global_dtors = appending global [1 x {{i32, void ()*, i8*}}] [{{i32, void ()*, i8*}} {{i32 0, void ()* @dtor_A, i8* null}}]
     """  # noqa E501
 
+asm_ext_ctors = r"""
+    ; ModuleID = "<string>"
+    target triple = "{triple}"
+
+    @A = external global i32
+
+    define void @ctor_A()
+    {{
+      store i32 10, i32* @A
+      ret void
+    }}
+
+    define void @dtor_A()
+    {{
+      store i32 20, i32* @A
+      ret void
+    }}
+
+    define i32 @foo()
+    {{
+      %.2 = load i32, i32* @A
+      %.3 = add i32 %.2, 2
+      ret i32 %.3
+    }}
+
+    @llvm.global_ctors = appending global [1 x {{i32, void ()*, i8*}}] [{{i32, void ()*, i8*}} {{i32 0, void ()* @ctor_A, i8* null}}]
+    @llvm.global_dtors = appending global [1 x {{i32, void ()*, i8*}}] [{{i32, void ()*, i8*}} {{i32 0, void ()* @dtor_A, i8* null}}]
+    """  # noqa E501
+
 
 asm_nonalphanum_blocklabel = """; ModuleID = ""
 target triple = "unknown-unknown-unknown"
 target datalayout = ""
 
-define i32 @"foo"() 
+define i32 @"foo"()
 {
 "<>!*''#":
   ret i32 12345
 }
 """  # noqa W291 # trailing space needed for match later
+
+
+asm_null_constant = r"""
+    ; ModuleID = '<string>'
+    target triple = "{triple}"
+
+    define void @foo(i64* %.1) {{
+      ret void
+    }}
+
+    define void @bar() {{
+      call void @foo(i64* null)
+      ret void
+    }}
+"""
 
 
 riscv_asm_ilp32 = [
@@ -251,6 +476,23 @@ issue_632_elf = \
 
 issue_632_text = \
     "48c1e2204809c24889d048c1c03d4831d048b90120000480001070480fafc8"
+
+
+asm_tli_exp2 = r"""
+; ModuleID = '<lambda>'
+source_filename = "<string>"
+target datalayout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-f80:128-n8:16:32:64-S128"
+target triple = "x86_64-pc-windows-msvc"
+
+declare float @llvm.exp2.f32(float %casted)
+
+define float @foo(i16 %arg) {
+entry:
+  %casted = sitofp i16 %arg to float
+  %ret = call float @llvm.exp2.f32(float %casted)
+  ret float %ret
+}
+"""  # noqa E501
 
 
 class BaseTest(TestCase):
@@ -445,15 +687,22 @@ class TestMisc(BaseTest):
         self.assertTrue(triple)
 
     def test_get_process_triple(self):
+        # Sometimes we get synonyms for PPC
+        def normalize_ppc(arch):
+            if arch == 'powerpc64le':
+                return 'ppc64le'
+            else:
+                return arch
+
         triple = llvm.get_process_triple()
         default = llvm.get_default_triple()
         self.assertIsInstance(triple, str)
         self.assertTrue(triple)
 
-        default_parts = default.split('-')
-        triple_parts = triple.split('-')
+        default_arch = normalize_ppc(default.split('-')[0])
+        triple_arch = normalize_ppc(triple.split('-')[0])
         # Arch must be equal
-        self.assertEqual(default_parts[0], triple_parts[0])
+        self.assertEqual(default_arch, triple_arch)
 
     def test_get_host_cpu_features(self):
         features = llvm.get_host_cpu_features()
@@ -509,7 +758,7 @@ class TestMisc(BaseTest):
     def test_version(self):
         major, minor, patch = llvm.llvm_version_info
         # one of these can be valid
-        valid = [(11,)]
+        valid = [(14, )]
         self.assertIn((major,), valid)
         self.assertIn(patch, range(10))
 
@@ -527,6 +776,12 @@ class TestMisc(BaseTest):
         got = str(m)
         # Changing the locale should not affect the LLVM IR
         self.assertEqual(expect, got)
+
+    def test_no_accidental_warnings(self):
+        code = "from llvmlite import binding"
+        flags = "-Werror"
+        cmdargs = [sys.executable, flags, "-c", code]
+        subprocess.check_call(cmdargs)
 
 
 class TestModuleRef(BaseTest):
@@ -561,6 +816,10 @@ class TestModuleRef(BaseTest):
         self.assertEqual(mod.name, "foo")
         mod.name = "bar"
         self.assertEqual(mod.name, "bar")
+
+    def test_source_file(self):
+        mod = self.module()
+        self.assertEqual(mod.source_file, "asm_sum.c")
 
     def test_data_layout(self):
         mod = self.module()
@@ -946,6 +1205,203 @@ class TestMCJit(BaseTest, JITWithTMTestMixin):
         return llvm.create_mcjit_compiler(mod, target_machine)
 
 
+# There are some memory corruption issues with OrcJIT on AArch64 - see Issue
+# #1000. Since OrcJIT is experimental, and we don't test regularly during
+# llvmlite development on non-x86 platforms, it seems safest to skip these
+# tests on non-x86 platforms.
+@unittest.skipUnless(platform.machine().startswith("x86"), "x86 only")
+class TestOrcLLJIT(BaseTest):
+
+    def jit(self, asm=asm_sum, func_name="sum", target_machine=None,
+            add_process=False, func_type=CFUNCTYPE(c_int, c_int, c_int),
+            suppress_errors=False):
+        lljit = llvm.create_lljit_compiler(target_machine,
+                                           use_jit_link=False,
+                                           suppress_errors=suppress_errors)
+        builder = llvm.JITLibraryBuilder()
+        if add_process:
+            builder.add_current_process()
+        rt = builder\
+            .add_ir(asm.format(triple=llvm.get_default_triple()))\
+            .export_symbol(func_name)\
+            .link(lljit, func_name)
+        cfptr = rt[func_name]
+        self.assertTrue(cfptr)
+        self.assertEqual(func_name, rt.name)
+        return lljit, rt, func_type(cfptr)
+
+    # From test_dylib_symbols
+    def test_define_symbol(self):
+        lljit = llvm.create_lljit_compiler()
+        rt = llvm.JITLibraryBuilder().import_symbol("__xyzzy", 1234)\
+            .export_symbol("__xyzzy").link(lljit, "foo")
+        self.assertEqual(rt["__xyzzy"], 1234)
+
+    def test_lookup_undefined_symbol_fails(self):
+        lljit = llvm.create_lljit_compiler()
+        with self.assertRaisesRegex(RuntimeError, 'No such library'):
+            lljit.lookup("foo", "__foobar")
+        rt = llvm.JITLibraryBuilder().import_symbol("__xyzzy", 1234)\
+            .export_symbol("__xyzzy").link(lljit, "foo")
+        self.assertNotEqual(rt["__xyzzy"], 0)
+        with self.assertRaisesRegex(RuntimeError,
+                                    'Symbols not found.*__foobar'):
+            lljit.lookup("foo", "__foobar")
+
+    def test_jit_link(self):
+        if sys.platform == "win32":
+            with self.assertRaisesRegex(RuntimeError,
+                                        'JITLink .* Windows'):
+                llvm.create_lljit_compiler(use_jit_link=True)
+        else:
+            self.assertIsNotNone(llvm.create_lljit_compiler(use_jit_link=True))
+
+    def test_run_code(self):
+        (lljit, rt, cfunc) = self.jit()
+        with lljit:
+            res = cfunc(2, -5)
+            self.assertEqual(-3, res)
+
+    def test_close(self):
+        (lljit, rt, cfunc) = self.jit()
+        lljit.close()
+        lljit.close()
+        with self.assertRaises(AssertionError):
+            lljit.lookup("foo", "fn")
+
+    def test_with(self):
+        (lljit, rt, cfunc) = self.jit()
+        with lljit:
+            pass
+        with self.assertRaises(RuntimeError):
+            with lljit:
+                pass
+        with self.assertRaises(AssertionError):
+            lljit.lookup("foo", "fn")
+
+    def test_add_ir_module(self):
+        (lljit, rt_sum, cfunc_sum) = self.jit()
+        rt_mul = llvm.JITLibraryBuilder() \
+            .add_ir(asm_mul.format(triple=llvm.get_default_triple())) \
+            .export_symbol("mul") \
+            .link(lljit, "mul")
+        res = CFUNCTYPE(c_int, c_int, c_int)(rt_mul["mul"])(2, -5)
+        self.assertEqual(-10, res)
+        self.assertNotEqual(lljit.lookup("sum", "sum")["sum"], 0)
+        self.assertNotEqual(lljit.lookup("mul", "mul")["mul"], 0)
+        with self.assertRaises(RuntimeError):
+            lljit.lookup("sum", "mul")
+        with self.assertRaises(RuntimeError):
+            lljit.lookup("mul", "sum")
+
+    def test_remove_module(self):
+        (lljit, rt_sum, _) = self.jit()
+        del rt_sum
+        gc.collect()
+        with self.assertRaises(RuntimeError):
+            lljit.lookup("sum", "sum")
+        lljit.close()
+
+    def test_lib_depends(self):
+        (lljit, rt_sum, cfunc_sum) = self.jit()
+        rt_mul = llvm.JITLibraryBuilder() \
+            .add_ir(asm_square_sum.format(triple=llvm.get_default_triple())) \
+            .export_symbol("square_sum") \
+            .add_jit_library("sum") \
+            .link(lljit, "square_sum")
+        res = CFUNCTYPE(c_int, c_int, c_int)(rt_mul["square_sum"])(2, -5)
+        self.assertEqual(9, res)
+
+    def test_target_data(self):
+        (lljit, rt, _) = self.jit()
+        td = lljit.target_data
+        # A singleton is returned
+        self.assertIs(lljit.target_data, td)
+        str(td)
+        del lljit
+        str(td)
+
+    def test_global_ctors_dtors(self):
+        # test issue #303
+        # (https://github.com/numba/llvmlite/issues/303)
+        shared_value = c_int32(0)
+        lljit = llvm.create_lljit_compiler()
+        builder = llvm.JITLibraryBuilder()
+        rt = builder \
+            .add_ir(asm_ext_ctors.format(triple=llvm.get_default_triple())) \
+            .import_symbol("A", ctypes.addressof(shared_value)) \
+            .export_symbol("foo") \
+            .link(lljit, "foo")
+        foo = rt["foo"]
+        self.assertTrue(foo)
+        self.assertEqual(CFUNCTYPE(c_int)(foo)(), 12)
+        del rt
+        self.assertNotEqual(shared_value.value, 20)
+
+    def test_lookup_current_process_symbol_fails(self):
+        # An attempt to lookup a symbol in the current process (Py_GetVersion,
+        # in this case) should fail with an appropriate error if we have not
+        # enabled searching the current process for symbols.
+        msg = 'Failed to materialize symbols:.*getversion'
+        with self.assertRaisesRegex(RuntimeError, msg):
+            self.jit(asm_getversion, "getversion", suppress_errors=True)
+
+    def test_lookup_current_process_symbol(self):
+        self.jit(asm_getversion, "getversion", None, True)
+
+    def test_thread_safe(self):
+        lljit = llvm.create_lljit_compiler()
+        llvm_ir = asm_sum.format(triple=llvm.get_default_triple())
+
+        def compile_many(i):
+            def do_work():
+                tracking = []
+                for c in range(50):
+                    tracking.append(llvm.JITLibraryBuilder()
+                                    .add_ir(llvm_ir)
+                                    .export_symbol("sum")
+                                    .link(lljit, f"sum_{i}_{c}"))
+
+            return do_work
+
+        ths = [threading.Thread(target=compile_many(i))
+               for i in range(os.cpu_count())]
+        for th in ths:
+            th.start()
+        for th in ths:
+            th.join()
+
+    def test_add_object_file(self):
+        target_machine = self.target_machine(jit=False)
+        mod = self.module()
+        lljit = llvm.create_lljit_compiler(target_machine)
+        rt = llvm.JITLibraryBuilder()\
+            .add_object_img(target_machine.emit_object(mod))\
+            .export_symbol("sum")\
+            .link(lljit, "sum")
+        sum = CFUNCTYPE(c_int, c_int, c_int)(rt["sum"])
+        self.assertEqual(sum(2, 3), 5)
+
+    def test_add_object_file_from_filesystem(self):
+        target_machine = self.target_machine(jit=False)
+        mod = self.module()
+        obj_bin = target_machine.emit_object(mod)
+        temp_desc, temp_path = mkstemp()
+
+        try:
+            with os.fdopen(temp_desc, "wb") as f:
+                f.write(obj_bin)
+            lljit = llvm.create_lljit_compiler(target_machine)
+            rt = llvm.JITLibraryBuilder() \
+                .add_object_file(temp_path) \
+                .export_symbol("sum") \
+                .link(lljit, "sum")
+            sum = CFUNCTYPE(c_int, c_int, c_int)(rt["sum"])
+            self.assertEqual(sum(2, 3), 5)
+        finally:
+            os.unlink(temp_path)
+
+
 class TestValueRef(BaseTest):
 
     def test_str(self):
@@ -1139,6 +1595,96 @@ class TestValueRef(BaseTest):
                 self.assertEqual(list(args[0].attributes), [b'returned'])
                 self.assertEqual(list(args[1].attributes), [])
 
+    def test_value_kind(self):
+        mod = self.module()
+        self.assertEqual(mod.get_global_variable('glob').value_kind,
+                         llvm.ValueKind.global_variable)
+        func = mod.get_function('sum')
+        self.assertEqual(func.value_kind, llvm.ValueKind.function)
+        block = list(func.blocks)[0]
+        self.assertEqual(block.value_kind, llvm.ValueKind.basic_block)
+        inst = list(block.instructions)[1]
+        self.assertEqual(inst.value_kind, llvm.ValueKind.instruction)
+        self.assertEqual(list(inst.operands)[0].value_kind,
+                         llvm.ValueKind.constant_int)
+        self.assertEqual(list(inst.operands)[1].value_kind,
+                         llvm.ValueKind.instruction)
+
+        iasm_func = self.module(asm_inlineasm).get_function('foo')
+        iasm_inst = list(list(iasm_func.blocks)[0].instructions)[0]
+        self.assertEqual(list(iasm_inst.operands)[0].value_kind,
+                         llvm.ValueKind.inline_asm)
+
+    def test_is_constant(self):
+        mod = self.module()
+        self.assertTrue(mod.get_global_variable('glob').is_constant)
+        constant_operands = 0
+        for func in mod.functions:
+            self.assertTrue(func.is_constant)
+            for block in func.blocks:
+                self.assertFalse(block.is_constant)
+                for inst in block.instructions:
+                    self.assertFalse(inst.is_constant)
+                    for op in inst.operands:
+                        if op.is_constant:
+                            constant_operands += 1
+
+        self.assertEqual(constant_operands, 1)
+
+    def test_constant_int(self):
+        mod = self.module()
+        func = mod.get_function('sum')
+        insts = list(list(func.blocks)[0].instructions)
+        self.assertEqual(insts[1].opcode, 'add')
+        operands = list(insts[1].operands)
+        self.assertTrue(operands[0].is_constant)
+        self.assertFalse(operands[1].is_constant)
+        self.assertEqual(operands[0].get_constant_value(), 0)
+        with self.assertRaises(ValueError):
+            operands[1].get_constant_value()
+
+        mod = self.module(asm_sum3)
+        func = mod.get_function('sum')
+        insts = list(list(func.blocks)[0].instructions)
+        posint64 = list(insts[1].operands)[0]
+        negint64 = list(insts[2].operands)[0]
+        self.assertEqual(posint64.get_constant_value(), 5)
+        self.assertEqual(negint64.get_constant_value(signed_int=True), -5)
+
+        # Convert from unsigned arbitrary-precision integer to signed i64
+        as_u64 = negint64.get_constant_value(signed_int=False)
+        as_i64 = int.from_bytes(as_u64.to_bytes(8, 'little'), 'little',
+                                signed=True)
+        self.assertEqual(as_i64, -5)
+
+    def test_constant_fp(self):
+        mod = self.module(asm_double_locale)
+        func = mod.get_function('foo')
+        insts = list(list(func.blocks)[0].instructions)
+        self.assertEqual(len(insts), 2)
+        self.assertEqual(insts[0].opcode, 'fadd')
+        operands = list(insts[0].operands)
+        self.assertTrue(operands[0].is_constant)
+        self.assertAlmostEqual(operands[0].get_constant_value(), 0.0)
+        self.assertTrue(operands[1].is_constant)
+        self.assertAlmostEqual(operands[1].get_constant_value(), 3.14)
+
+        mod = self.module(asm_double_inaccurate)
+        func = mod.get_function('foo')
+        inst = list(list(func.blocks)[0].instructions)[0]
+        operands = list(inst.operands)
+        with self.assertRaises(ValueError):
+            operands[0].get_constant_value()
+        self.assertAlmostEqual(operands[1].get_constant_value(round_fp=True), 0)
+
+    def test_constant_as_string(self):
+        mod = self.module(asm_null_constant)
+        func = mod.get_function('bar')
+        inst = list(list(func.blocks)[0].instructions)[0]
+        arg = list(inst.operands)[0]
+        self.assertTrue(arg.is_constant)
+        self.assertEqual(arg.get_constant_value(), 'i64* null')
+
 
 class TestTarget(BaseTest):
 
@@ -1307,6 +1853,7 @@ class PassManagerTestMixin(object):
     def pmb(self):
         pmb = llvm.create_pass_manager_builder()
         pmb.opt_level = 2
+        pmb.inlining_threshold = 300
         return pmb
 
     def test_close(self):
@@ -1350,6 +1897,49 @@ class TestModulePassManager(BaseTest, PassManagerTestMixin):
         else:
             raise RuntimeError("expected IR not found")
 
+    def test_run_with_remarks_successful_inline(self):
+        pm = self.pm()
+        pm.add_function_inlining_pass(70)
+        self.pmb().populate(pm)
+        mod = self.module(asm_inlineasm2)
+        (status, remarks) = pm.run_with_remarks(mod)
+        self.assertTrue(status)
+        # Inlining has happened?  The remark will tell us.
+        self.assertIn("Passed", remarks)
+        self.assertIn("inlineme", remarks)
+
+    def test_run_with_remarks_failed_inline(self):
+        pm = self.pm()
+        pm.add_function_inlining_pass(0)
+        self.pmb().populate(pm)
+        mod = self.module(asm_inlineasm3)
+        (status, remarks) = pm.run_with_remarks(mod)
+        self.assertTrue(status)
+
+        # Inlining has not happened?  The remark will tell us.
+        self.assertIn("Missed", remarks)
+        self.assertIn("inlineme", remarks)
+        self.assertIn("noinline function attribute", remarks)
+
+    def test_run_with_remarks_inline_filter_out(self):
+        pm = self.pm()
+        pm.add_function_inlining_pass(70)
+        self.pmb().populate(pm)
+        mod = self.module(asm_inlineasm2)
+        (status, remarks) = pm.run_with_remarks(mod, remarks_filter="nothing")
+        self.assertTrue(status)
+        self.assertEqual("", remarks)
+
+    def test_run_with_remarks_inline_filter_in(self):
+        pm = self.pm()
+        pm.add_function_inlining_pass(70)
+        self.pmb().populate(pm)
+        mod = self.module(asm_inlineasm2)
+        (status, remarks) = pm.run_with_remarks(mod, remarks_filter="inlin.*")
+        self.assertTrue(status)
+        self.assertIn("Passed", remarks)
+        self.assertIn("inlineme", remarks)
+
 
 class TestFunctionPassManager(BaseTest, PassManagerTestMixin):
 
@@ -1377,6 +1967,50 @@ class TestFunctionPassManager(BaseTest, PassManagerTestMixin):
         self.assertIn("%.4", orig_asm)
         self.assertNotIn("%.4", opt_asm)
 
+    def test_run_with_remarks(self):
+        mod = self.module(licm_asm)
+        fn = mod.get_function("licm")
+        pm = self.pm(mod)
+        pm.add_licm_pass()
+        self.pmb().populate(pm)
+        mod.close()
+
+        pm.initialize()
+        (ok, remarks) = pm.run_with_remarks(fn)
+        pm.finalize()
+        self.assertTrue(ok)
+        self.assertIn("Passed", remarks)
+        self.assertIn("licm", remarks)
+
+    def test_run_with_remarks_filter_out(self):
+        mod = self.module(licm_asm)
+        fn = mod.get_function("licm")
+        pm = self.pm(mod)
+        pm.add_licm_pass()
+        self.pmb().populate(pm)
+        mod.close()
+
+        pm.initialize()
+        (ok, remarks) = pm.run_with_remarks(fn, remarks_filter="nothing")
+        pm.finalize()
+        self.assertTrue(ok)
+        self.assertEqual("", remarks)
+
+    def test_run_with_remarks_filter_in(self):
+        mod = self.module(licm_asm)
+        fn = mod.get_function("licm")
+        pm = self.pm(mod)
+        pm.add_licm_pass()
+        self.pmb().populate(pm)
+        mod.close()
+
+        pm.initialize()
+        (ok, remarks) = pm.run_with_remarks(fn, remarks_filter="licm")
+        pm.finalize()
+        self.assertTrue(ok)
+        self.assertIn("Passed", remarks)
+        self.assertIn("licm", remarks)
+
 
 class TestPasses(BaseTest, PassManagerTestMixin):
 
@@ -1385,6 +2019,7 @@ class TestPasses(BaseTest, PassManagerTestMixin):
 
     def test_populate(self):
         pm = self.pm()
+        pm.add_target_library_info("") # unspecified target triple
         pm.add_constant_merge_pass()
         pm.add_dead_arg_elimination_pass()
         pm.add_function_attrs_pass()
@@ -1402,6 +2037,82 @@ class TestPasses(BaseTest, PassManagerTestMixin):
         pm.add_type_based_alias_analysis_pass()
         pm.add_basic_alias_analysis_pass()
         pm.add_loop_rotate_pass()
+        pm.add_region_info_pass()
+        pm.add_scalar_evolution_aa_pass()
+        pm.add_aggressive_dead_code_elimination_pass()
+        pm.add_aa_eval_pass()
+        pm.add_always_inliner_pass()
+        pm.add_arg_promotion_pass(42)
+        pm.add_break_critical_edges_pass()
+        pm.add_dead_store_elimination_pass()
+        pm.add_reverse_post_order_function_attrs_pass()
+        pm.add_aggressive_instruction_combining_pass()
+        pm.add_internalize_pass()
+        pm.add_jump_threading_pass(7)
+        pm.add_lcssa_pass()
+        pm.add_loop_deletion_pass()
+        pm.add_loop_extractor_pass()
+        pm.add_single_loop_extractor_pass()
+        pm.add_loop_strength_reduce_pass()
+        pm.add_loop_simplification_pass()
+        pm.add_loop_unroll_pass()
+        pm.add_loop_unroll_and_jam_pass()
+        pm.add_loop_unswitch_pass()
+        pm.add_lower_atomic_pass()
+        pm.add_lower_invoke_pass()
+        pm.add_lower_switch_pass()
+        pm.add_memcpy_optimization_pass()
+        pm.add_merge_functions_pass()
+        pm.add_merge_returns_pass()
+        pm.add_partial_inlining_pass()
+        pm.add_prune_exception_handling_pass()
+        pm.add_reassociate_expressions_pass()
+        pm.add_demote_register_to_memory_pass()
+        pm.add_sink_pass()
+        pm.add_strip_symbols_pass()
+        pm.add_strip_dead_debug_info_pass()
+        pm.add_strip_dead_prototypes_pass()
+        pm.add_strip_debug_declare_pass()
+        pm.add_strip_nondebug_symbols_pass()
+        pm.add_tail_call_elimination_pass()
+        pm.add_basic_aa_pass()
+        pm.add_dependence_analysis_pass()
+        pm.add_dot_call_graph_pass()
+        pm.add_dot_cfg_printer_pass()
+        pm.add_dot_dom_printer_pass()
+        pm.add_dot_postdom_printer_pass()
+        pm.add_globals_mod_ref_aa_pass()
+        pm.add_iv_users_pass()
+        pm.add_lazy_value_info_pass()
+        pm.add_lint_pass()
+        pm.add_module_debug_info_pass()
+        pm.add_refprune_pass()
+
+    @unittest.skipUnless(platform.machine().startswith("x86"), "x86 only")
+    def test_target_library_info_behavior(self):
+        """Test a specific situation that demonstrate TLI is affecting
+        optimization. See https://github.com/numba/numba/issues/8898.
+        """
+        def run(use_tli):
+            mod = llvm.parse_assembly(asm_tli_exp2)
+            target = llvm.Target.from_triple(mod.triple)
+            tm = target.create_target_machine()
+            pm = llvm.ModulePassManager()
+            tm.add_analysis_passes(pm)
+            if use_tli:
+                pm.add_target_library_info(mod.triple)
+            pm.add_instruction_combining_pass()
+            pm.run(mod)
+            return mod
+
+        # Run with TLI should suppress transformation of exp2 -> ldexpf
+        mod = run(use_tli=True)
+        self.assertIn("call float @llvm.exp2.f32", str(mod))
+
+        # Run without TLI will enable the transformation
+        mod = run(use_tli=False)
+        self.assertNotIn("call float @llvm.exp2.f32", str(mod))
+        self.assertIn("call float @ldexpf", str(mod))
 
 
 class TestDylib(BaseTest):
@@ -1410,14 +2121,10 @@ class TestDylib(BaseTest):
         with self.assertRaises(RuntimeError):
             llvm.load_library_permanently("zzzasdkf;jasd;l")
 
-    @unittest.skipUnless(platform.system() in ["Linux", "Darwin"],
-                         "test only works on Linux and Darwin")
+    @unittest.skipUnless(platform.system() in ["Linux"],
+                         "test only works on Linux")
     def test_libm(self):
-        system = platform.system()
-        if system == "Linux":
-            libm = find_library("m")
-        elif system == "Darwin":
-            libm = find_library("libm")
+        libm = find_library("m")
         llvm.load_library_permanently(libm)
 
 

@@ -1,5 +1,5 @@
 
-CXX = clang++ -std=c++11 -stdlib=libc++
+CXX = clang++ -stdlib=libc++
 
 # -flto and --exclude-libs allow us to remove those parts of LLVM we don't use
 CXX_FLTO_FLAGS ?= -flto
@@ -11,7 +11,7 @@ LIBS = $(LLVM_LIBS)
 INCLUDE = core.h
 SRC = assembly.cpp bitcode.cpp core.cpp initfini.cpp module.cpp value.cpp \
 	executionengine.cpp transforms.cpp passmanagers.cpp targets.cpp dylib.cpp \
-	linker.cpp object_file.cpp
+	linker.cpp object_file.cpp orcjit.cpp custom_passes.cpp
 OUTPUT = libllvmlite.so
 
 all: $(OUTPUT)

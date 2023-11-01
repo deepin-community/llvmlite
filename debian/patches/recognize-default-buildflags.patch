@@ -8,7 +8,7 @@ Index: llvmlite/ffi/build.py
 ===================================================================
 --- llvmlite.orig/ffi/build.py
 +++ llvmlite/ffi/build.py
-@@ -190,10 +190,10 @@ def main_posix(kind, library_ext):
+@@ -192,10 +192,10 @@ def main_posix(kind, library_ext):
      else:
          print('SVML not detected')
  

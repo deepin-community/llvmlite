@@ -9,7 +9,7 @@ Build-Depends:
  python3:any | python3-all:any,
  python3-all-dev,
  python3-setuptools,
- llvm-13-dev,
+ llvm-14-dev,
 Build-Depends-Indep:
  dh-sequence-sphinxdoc,
  python3-sphinx,
@@ -23,7 +23,7 @@ Package: python3-llvmlite
 Architecture: any
 Depends:
  ${python3:Depends},
- llvm-13,
+ ${llvm:Depends},
  ${misc:Depends},
  ${shlibs:Depends}
 Suggests:
