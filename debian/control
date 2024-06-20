@@ -9,7 +9,7 @@ Build-Depends:
  python3:any | python3-all:any,
  python3-all-dev,
  python3-setuptools,
- llvm-14-dev,
+ llvm-15-dev,
 Build-Depends-Indep:
  dh-sequence-sphinxdoc,
  python3-sphinx,
