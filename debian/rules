@@ -1,7 +1,7 @@
 #!/usr/bin/make -f
 export DH_VERBOSE=1
 export PYBUILD_NAME=llvmlite
-export LLVM_CONFIG=/usr/lib/llvm-14/bin/llvm-config
+export LLVM_CONFIG=/usr/lib/llvm-15/bin/llvm-config
 export DEB_BUILD_MAINT_OPTIONS=hardening=+all
 
 export CXXFLAGS := $(shell DEB_CXXFLAGS_MAINT_APPEND=-fPIC dpkg-buildflags --get CXXFLAGS)
