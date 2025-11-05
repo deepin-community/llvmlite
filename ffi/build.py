@@ -99,7 +99,28 @@ def find_windows_generator():
     raise RuntimeError("No compatible cmake generator installed on this machine")
 
 
+def remove_msvc_whole_program_optimization():
+    """Remove MSVC whole-program optimization flags.
+    This workaround a segfault issue on windows.
+    Note: conda-build is known to enable the `-GL` flag.
+    """
+    def drop_gl(flags):
+        try:
+            flags.remove('-GL')
+        except ValueError:
+            pass
+        else:
+            print(f"removed '-GL' flag in {flags}")
+    cflags = os.environ.get('CFLAGS', '').split(' ')
+    cxxflags = os.environ.get('CXXFLAGS', '').split(' ')
+    drop_gl(cflags)
+    drop_gl(cxxflags)
+    os.environ['CFLAGS'] = ' '.join(cflags)
+    os.environ['CXXFLAGS'] = ' '.join(cxxflags)
+
+
 def main_windows():
+    remove_msvc_whole_program_optimization()
     generator = find_windows_generator()
     config = 'Release'
     if not os.path.exists(build_dir):
@@ -167,13 +188,13 @@ def main_posix(kind, library_ext):
     else:
         (version, _) = out.split('.', 1)
         version = int(version)
-        if version == 15:
-            msg = ("Building with LLVM 15; note that LLVM 15 support is "
+        if version == 16:
+            msg = ("Building with LLVM 16; note that LLVM 16 support is "
                    "presently experimental")
             show_warning(msg)
-        elif version != 14:
+        elif version != 15:
 
-            msg = ("Building llvmlite requires LLVM 14, got "
+            msg = ("Building llvmlite requires LLVM 15, got "
                    "{!r}. Be sure to set LLVM_CONFIG to the right executable "
                    "path.\nRead the documentation at "
                    "http://llvmlite.pydata.org/ for more information about "
@@ -225,6 +246,8 @@ def main():
         main_posix('linux', '.so')
     elif sys.platform.startswith(('freebsd','openbsd')):
         main_posix('freebsd', '.so')
+    elif sys.platform.startswith('netbsd'):
+        main_posix('netbsd', '.so')
     elif sys.platform == 'darwin':
         main_posix('osx', '.dylib')
     else:

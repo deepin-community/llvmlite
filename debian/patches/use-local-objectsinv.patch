@@ -1,0 +1,17 @@
+Author: Diane Trout <diane@ghic.org>
+Description: Point intersphinx to copies of the sphinx objects.inv
+ files built by debian for the referenced projects
+
+--- a/docs/source/conf.py
++++ b/docs/source/conf.py
+@@ -300,8 +300,8 @@
+ 
+ # Example configuration for intersphinx: refer to the Python standard library.
+ intersphinx_mapping = {
+-    'python': ('https://docs.python.org/3', None),
+-    'llvm': ('http://llvm.org/releases/15.0.0/docs', None),
++    'python': ('https://docs.python.org/3', '/usr/share/doc/python3-doc/html/objects.inv'),
++    'llvm': ('http://llvm.org/releases/17.0.0/docs', '/usr/share/doc/llvm-17-doc/html/objects.inv'),
+     }
+ 
+ nitpicky = True

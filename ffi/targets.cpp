@@ -1,6 +1,7 @@
 #include "core.h"
 #include "llvm-c/Target.h"
 #include "llvm-c/TargetMachine.h"
+#include "llvm/ADT/Optional.h"
 #include "llvm/ADT/Triple.h"
 #include "llvm/Analysis/TargetLibraryInfo.h"
 #include "llvm/IR/LegacyPassManager.h"
@@ -32,6 +33,24 @@ extern "C" {
 API_EXPORT(void)
 LLVMPY_GetProcessTriple(const char **Out) {
     *Out = LLVMPY_CreateString(llvm::sys::getProcessTriple().c_str());
+}
+
+API_EXPORT(void)
+LLVMPY_GetTripleParts(const char *triple_str, const char **arch_out,
+                      const char **vendor_out, const char **os_out,
+                      const char **environment_out) {
+    // Normalize the triple string
+    auto triple_str_norm = llvm::Triple::normalize(triple_str);
+    auto triple = llvm::Triple(triple_str_norm);
+
+    *arch_out = LLVMPY_CreateString(
+        llvm::Triple::getArchTypeName(triple.getArch()).data());
+    *vendor_out = LLVMPY_CreateString(
+        llvm::Triple::getVendorTypeName(triple.getVendor()).data());
+    *os_out =
+        LLVMPY_CreateString(llvm::Triple::getOSTypeName(triple.getOS()).data());
+    *environment_out = LLVMPY_CreateString(
+        llvm::Triple::getEnvironmentTypeName(triple.getEnvironment()).data());
 }
 
 /**
@@ -98,6 +117,12 @@ LLVMPY_OffsetOfElement(LLVMTargetDataRef TD, LLVMTypeRef Ty, int Element) {
 }
 
 API_EXPORT(long long)
+LLVMPY_ABIAlignmentOfType(LLVMTargetDataRef TD, LLVMTypeRef Ty) {
+    return (long long)LLVMABIAlignmentOfType(TD, Ty);
+}
+
+// FIXME: Remove me once typed pointers are no longer supported.
+API_EXPORT(long long)
 LLVMPY_ABISizeOfElementType(LLVMTargetDataRef TD, LLVMTypeRef Ty) {
     llvm::Type *tp = llvm::unwrap(Ty);
     if (!tp->isPointerTy())
@@ -106,6 +131,7 @@ LLVMPY_ABISizeOfElementType(LLVMTargetDataRef TD, LLVMTypeRef Ty) {
     return (long long)LLVMABISizeOfType(TD, llvm::wrap(tp));
 }
 
+// FIXME: Remove me once typed pointers are no longer supported.
 API_EXPORT(long long)
 LLVMPY_ABIAlignmentOfElementType(LLVMTargetDataRef TD, LLVMTypeRef Ty) {
     llvm::Type *tp = llvm::unwrap(Ty);
