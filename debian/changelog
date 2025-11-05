@@ -1,3 +1,13 @@
+llvmlite (0.44.0-1deepin1) unstable; urgency=medium
+
+  * Switch from LLVM 19 to LLVM 17.
+  * d/patches/llvm-19-support-pr1182.patch:
+    - Drop llvm::sys::getHostCPUFeatures changes.
+    - Fix DebuggerSupportPlugin.h path.
+    - Revert CodeGenOpt::Level related changes.
+
+ -- Tianyu Chen <sweetyfish@deepin.org>  Wed, 05 Nov 2025 21:28:32 +0800
+
 llvmlite (0.44.0-1) unstable; urgency=medium
 
   [ Diane Trout ]

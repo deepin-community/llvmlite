@@ -11,7 +11,7 @@ Description: Point intersphinx to copies of the sphinx objects.inv
 -    'python': ('https://docs.python.org/3', None),
 -    'llvm': ('http://llvm.org/releases/15.0.0/docs', None),
 +    'python': ('https://docs.python.org/3', '/usr/share/doc/python3-doc/html/objects.inv'),
-+    'llvm': ('http://llvm.org/releases/19.0.0/docs', '/usr/share/doc/llvm-19-doc/html/objects.inv'),
++    'llvm': ('http://llvm.org/releases/17.0.0/docs', '/usr/share/doc/llvm-17-doc/html/objects.inv'),
      }
  
  nitpicky = True

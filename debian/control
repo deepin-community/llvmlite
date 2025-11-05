@@ -10,8 +10,8 @@ Build-Depends:
  python3:any | python3-all:any,
  python3-all-dev,
  python3-setuptools,
- llvm-19-dev,
- llvm-19-doc <!nodoc>,
+ llvm-17-dev,
+ llvm-17-doc <!nodoc>,
 Build-Depends-Indep:
  dh-sequence-sphinxdoc,
  python3-sphinx,
