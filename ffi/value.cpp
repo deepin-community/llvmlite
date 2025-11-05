@@ -6,9 +6,7 @@
 
 // the following is needed for WriteGraph()
 #include "llvm/Analysis/CFGPrinter.h"
-#if LLVM_VERSION_MAJOR > 14
 #include "llvm/Support/GraphWriter.h"
-#endif
 
 /* An iterator around a attribute list, including the stop condition */
 struct AttributeListIterator {
@@ -405,6 +403,11 @@ LLVMPY_SetValueName(LLVMValueRef Val, const char *Name) {
 
 API_EXPORT(LLVMModuleRef)
 LLVMPY_GetGlobalParent(LLVMValueRef Val) { return LLVMGetGlobalParent(Val); }
+
+API_EXPORT(LLVMTypeRef)
+LLVMPY_GlobalGetValueType(LLVMValueRef GlobalVal) {
+    return LLVMGlobalGetValueType(GlobalVal);
+}
 
 API_EXPORT(void)
 LLVMPY_SetLinkage(LLVMValueRef Val, int Linkage) {

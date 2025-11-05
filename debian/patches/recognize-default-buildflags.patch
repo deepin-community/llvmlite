@@ -4,11 +4,9 @@ Author: Daniel Stender <stender@debian.org>
 Forwarded: not-needed
 Last-Update: 2019-01-04
 
-Index: llvmlite/ffi/build.py
-===================================================================
---- llvmlite.orig/ffi/build.py
-+++ llvmlite/ffi/build.py
-@@ -192,10 +192,10 @@ def main_posix(kind, library_ext):
+--- a/ffi/build.py
++++ b/ffi/build.py
+@@ -220,10 +220,10 @@
      else:
          print('SVML not detected')
  

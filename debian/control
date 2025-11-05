@@ -6,10 +6,12 @@ Uploaders: Mo Zhou <lumin@debian.org>
 Build-Depends:
  debhelper-compat (= 13),
  dh-python,
+ python3-doc <!nodoc>,
  python3:any | python3-all:any,
  python3-all-dev,
  python3-setuptools,
- llvm-15-dev,
+ llvm-19-dev,
+ llvm-19-doc <!nodoc>,
 Build-Depends-Indep:
  dh-sequence-sphinxdoc,
  python3-sphinx,

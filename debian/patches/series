@@ -1,2 +1,4 @@
-llvm-14-compat.patch
 recognize-default-buildflags.patch
+use-local-objectsinv.patch
+llvm-19-support-pr1182.patch
+skip-llvm-19-broken-tests.patch

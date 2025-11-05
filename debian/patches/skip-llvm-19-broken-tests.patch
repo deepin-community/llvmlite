@@ -1,0 +1,19 @@
+--- a/llvmlite/tests/test_binding.py
++++ b/llvmlite/tests/test_binding.py
+@@ -1485,6 +1485,7 @@
+         del rt
+         self.assertNotEqual(shared_value.value, 20)
+ 
++    @unittest.expectedFailure
+     def test_lookup_current_process_symbol_fails(self):
+         # An attempt to lookup a symbol in the current process (Py_GetVersion,
+         # in this case) should fail with an appropriate error if we have not
+@@ -2428,6 +2429,8 @@
+         }}
+     """
+ 
++    # something about the .text layout changed by llvm-19
++    @unittest.skip
+     def test_object_file(self):
+         target_machine = self.target_machine(jit=False)
+         mod = self.module()

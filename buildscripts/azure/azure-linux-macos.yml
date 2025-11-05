@@ -14,6 +14,11 @@ jobs:
       ${{ insert }}: ${{ parameters.matrix }}
 
   steps:
+    - bash: |
+        sudo xcode-select -s /Applications/Xcode_14.2.app/Contents/Developer
+      condition: eq('${{ parameters.name }}', 'macOS')
+      displayName: 'Set macOS build environment (Xcode 14.2)'
+
     - script: |
         set -e
         if [ "$(uname)" == "Linux" ] && [[ "$CONDA_SUBDIR" == "linux-32" || "$BITS32" == "yes" ]]; then sudo apt-get install -y libc6-dev-i386; fi
@@ -38,17 +43,6 @@ jobs:
         flake8 llvmlite
       displayName: 'Flake8'
       condition: eq(variables['RUN_FLAKE8'], 'yes')
-
-    - script: |
-        set -e
-        export PATH=$HOME/miniconda3/bin:$PATH
-        conda install -y sphinx sphinx_rtd_theme pygments
-        echo "Building docs"
-        cd docs
-        make SPHINXOPTS=-Wn clean html
-        cd ..
-      displayName: 'Build Docs'
-      condition: eq(variables['BUILD_DOCS'], 'yes')
 
     - script: |
         set -e
